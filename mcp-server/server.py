@@ -22,12 +22,30 @@ import io
 import json
 import os
 import re
+import subprocess
 import sys
 import time
 import xml.etree.ElementTree as ET
 import zipfile
 from pathlib import Path
 from typing import Optional
+
+# ---------------------------------------------------------------------------
+# Auto-install dependencies if missing (fallback for non-uv environments)
+# ---------------------------------------------------------------------------
+def _ensure_dependencies():
+    """Install required packages if they're not available."""
+    try:
+        import mcp  # noqa: F401
+        import httpx  # noqa: F401
+    except ImportError:
+        print("Installing dependencies (consider using 'uv run --with mcp[cli] --with httpx' instead)...", file=sys.stderr)
+        subprocess.check_call(
+            [sys.executable, "-m", "pip", "install", "--quiet", "mcp>=1.0.0", "httpx>=0.27.0"],
+            stdout=sys.stderr, stderr=sys.stderr,
+        )
+
+_ensure_dependencies()
 
 from mcp.server.fastmcp import FastMCP
 
