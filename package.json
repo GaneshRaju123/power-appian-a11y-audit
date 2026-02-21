@@ -1,0 +1,36 @@
+{
+  "name": "power-appian-a11y-audit",
+  "displayName": "Appian A11y Audit",
+  "version": "2.0.0",
+  "description": "Accessibility audit assistant for Appian SAIL interfaces. Includes its own MCP server to pull SAIL code directly from Appian environments. Analyzes mockup screenshots and SAIL code against the Solutions A11y Checklist, cross-references Jira bugs, and generates audit reports.",
+  "keywords": [
+    "appian",
+    "accessibility",
+    "a11y",
+    "audit",
+    "WCAG",
+    "SAIL",
+    "508",
+    "checklist",
+    "mockup",
+    "screen reader",
+    "aria",
+    "label",
+    "source selection"
+  ],
+  "author": "Ganesh Raju",
+  "license": "MIT",
+  "mcpServers": {
+    "appian-sail-source": {
+      "command": "bash",
+      "args": ["mcp-server/run.sh"],
+      "env": {
+        "APPIAN_URL": "",
+        "APPIAN_API_KEY": "",
+        "APPIAN_APP_UUID": "",
+        "APPIAN_LOCAL_ZIP": "",
+        "APPIAN_APP_NAME": "SourceSelection"
+      }
+    }
+  }
+}

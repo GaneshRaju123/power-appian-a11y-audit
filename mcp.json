@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "appian-sail-source": {
+      "command": "bash",
+      "args": ["mcp-server/run.sh"],
+      "env": {
+        "APPIAN_URL": "",
+        "APPIAN_API_KEY": "",
+        "APPIAN_APP_UUID": "",
+        "APPIAN_LOCAL_ZIP": "",
+        "APPIAN_APP_NAME": "SourceSelection"
+      }
+    }
+  }
+}
