@@ -10,7 +10,7 @@ Accessibility audit assistant for Appian SAIL interfaces. Catches a11y issues at
 |---------|-------------|
 | 🔍 SAIL Code Auditing | Pulls SAIL directly from Appian, checks 50+ a11y rules |
 | 🖼️ Mockup Analysis | Analyzes feature screenshots for visual a11y issues |
-| 🐛 Jira Awareness | Cross-references historical GAM a11y bugs |
+| 🐛 Jira Awareness | Cross-references historical a11y bugs from any Jira project |
 | 🧩 Component Search | Finds all interfaces using a specific SAIL component |
 | 📄 Audit Reports | Generates categorized findings (must-fix, verify, watch-out) |
 
@@ -40,10 +40,12 @@ After installing, click **Open Power Config** and fill in your env vars:
 |----------|-------|
 | `APPIAN_URL` | `https://yoursite.appiancloud.com` |
 | `APPIAN_API_KEY` | Your API key with deployment permissions |
-| `APPIAN_APP_UUID` | Default app UUID *(optional)* |
-| `APPIAN_APP_NAME` | e.g. `SourceSelection` |
+| `APPIAN_APP_UUID` | Default app UUID *(optional — auto-loads on startup)* |
+| `APPIAN_APP_NAME` | Short team name for the app, e.g. `SourceSelection` |
 
-> **Multi-app support:** The API key works across all apps on your site. Set a default UUID for convenience, or load any app on the fly from chat.
+> **APPIAN_APP_NAME** is a friendly label you choose — it doesn't need to match the Appian application name exactly. Use whatever short name your team recognizes (e.g. `SourceSelection` instead of `AS GSS Full Application`). It's used to tag objects in tool output.
+
+> **Multi-app support:** The API key works across all apps on your site. Set a default UUID for convenience, or load any app on the fly from chat. See [Loading Multiple Applications](#loading-multiple-applications) below.
 
 ### Option B: Offline ZIP
 
@@ -104,6 +106,29 @@ Full a11y audit for SourceSelection. Check Jira too.
 
 ---
 
+## Loading Multiple Applications
+
+The env vars configure ONE default app that auto-loads on startup. To audit across multiple apps in the same session, load additional apps from chat:
+
+```
+Load application with UUID _a-xxxx-yyyy-zzzz and name CaseManagement
+```
+
+Or from a local ZIP:
+```
+Load application from ~/exports/CaseManagement.zip with name CaseManagement
+```
+
+All objects from all loaded apps stay in memory. You can then search and audit across apps:
+```
+Find all interfaces using a!gridField
+Audit AS_CMS_FM_createCase
+```
+
+Each object is tagged with its app name so you can tell which app it belongs to in tool output.
+
+---
+
 ## What Gets Checked
 
 50+ rules from the Solutions A11y Checklist:
@@ -143,4 +168,4 @@ Full a11y audit for SourceSelection. Check Jira too.
 
 ## License
 
-MIT
+UNLICENSED — Appian internal use only.

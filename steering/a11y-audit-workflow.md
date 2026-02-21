@@ -31,9 +31,14 @@ Priority order:
 8. Check all remaining SAIL-testable rules
 
 ### Step 3: Query Jira for Historical Bugs
-If Jira MCP is available, search for past a11y bugs:
-- JQL: `project = GAM AND summary ~ "a11y" ORDER BY updated DESC`
-- JQL: `project = GAM AND labels = accessibility ORDER BY updated DESC`
+If Jira MCP is available, search for past a11y bugs. Determine the Jira project key based on the application being audited:
+- SourceSelection / GAM apps → `project = GAM`
+- Case Management apps → `project = CMS` (or ask user for project key)
+- Other apps → ask the user which Jira project to search
+
+Example JQL patterns:
+- `project = <KEY> AND summary ~ "a11y" ORDER BY updated DESC`
+- `project = <KEY> AND labels = accessibility ORDER BY updated DESC`
 Look for patterns matching components in the current interface.
 
 ### Step 4: Generate Report

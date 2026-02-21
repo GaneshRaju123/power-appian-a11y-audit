@@ -9,7 +9,7 @@ Accessibility audit assistant for Appian low-code developers. Catches a11y issue
 - Pulls SAIL code directly from your Appian environment (via Deployment API export)
 - Analyzes feature mockup screenshots for visual accessibility issues
 - Audits SAIL code against the complete Solutions A11y Checklist (50+ rules)
-- Cross-references historical GAM Jira bugs for repeat patterns
+- Cross-references historical Jira bugs for repeat patterns (supports any Jira project — GAM, CMS, etc.)
 - Generates categorized audit reports (must-fix, verify, watch-out)
 - Finds all interfaces using a specific component (e.g., all grids, all file uploads)
 
@@ -25,10 +25,23 @@ Set these environment variables in the MCP server config:
 1. Export your application from Appian Designer (Build > Export)
 2. Save the ZIP file somewhere on your machine
 3. Set `APPIAN_LOCAL_ZIP` to the path of the ZIP file
-4. Set `APPIAN_APP_NAME` to a friendly name (e.g., "SourceSelection")
+4. Set `APPIAN_APP_NAME` to a short recognizable name (e.g., "SourceSelection")
+
+> **APPIAN_APP_NAME** is a friendly label — it doesn't need to match the Appian application name. Use whatever short name your team recognizes. It tags objects in tool output.
 
 ### Option C: Paste SAIL directly
 No setup needed — just paste SAIL code into Kiro chat.
+
+### Loading Multiple Applications
+The env vars configure one default app that auto-loads on startup. To work with additional apps in the same session, load them from chat:
+```
+Load application with UUID _a-xxxx-yyyy and name CaseManagement
+```
+Or from a ZIP:
+```
+Load application from ~/exports/CaseManagement.zip with name CaseManagement
+```
+All loaded objects stay in memory. You can search and audit across all loaded apps.
 
 ## MCP Server Tools
 
@@ -95,5 +108,5 @@ The power checks against these rule categories:
 Every audit generates:
 1. **Automated SAIL Findings** — issues found by inspecting code parameters
 2. **Manual Checks Required** — things that need visual/keyboard testing
-3. **Historical Bug Patterns** — past GAM bugs on similar components
+3. **Historical Bug Patterns** — past Jira bugs on similar components
 4. **Component A11y Summary** — all rules per component type

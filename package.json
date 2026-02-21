@@ -19,7 +19,8 @@
     "source selection"
   ],
   "author": "Ganesh Raju",
-  "license": "MIT",
+  "private": true,
+  "license": "UNLICENSED",
   "mcpServers": {
     "appian-sail-source": {
       "command": "bash",
