@@ -85,23 +85,36 @@ async def _export_application(app_uuid: str) -> bytes:
         "name": f"a11y-audit-export-{int(time.time())}",
     }
 
+    json_str = json.dumps(payload)
+
     async with httpx.AsyncClient(timeout=300) as client:
-        resp = await client.post(url, headers=headers, data={"json": json.dumps(payload)})
-        resp.raise_for_status()
+        # Appian v2 requires multipart/form-data with a 'json' field
+        resp = await client.post(url, headers=headers, files={"json": (None, json_str)})
+        print(f"[DEBUG] Export POST status: {resp.status_code}", file=sys.stderr)
+        print(f"[DEBUG] Export POST body: {resp.text[:500]}", file=sys.stderr)
+        if resp.status_code >= 400:
+            raise RuntimeError(f"Export API returned {resp.status_code}: {resp.text}")
         result = resp.json()
         deploy_uuid = result["uuid"]
 
         for _ in range(60):
             status_resp = await client.get(f"{url}/{deploy_uuid}", headers={"appian-api-key": APPIAN_API_KEY})
             status_resp.raise_for_status()
-            status = status_resp.json().get("status", "")
-            if status in ("COMPLETED", "COMPLETED_WITH_ERRORS"):
+            status_data = status_resp.json()
+            status = status_data.get("status", "")
+            print(f"[DEBUG] Export status: {status}", file=sys.stderr)
+            if status in ("COMPLETED", "COMPLETED_WITH_EXPORT_ERRORS"):
                 break
             if status == "FAILED":
-                raise RuntimeError(f"Export failed: {status_resp.json()}")
+                raise RuntimeError(f"Export failed: {status_data}")
             await asyncio.sleep(5)
 
-        download_resp = await client.get(f"{url}/{deploy_uuid}/download", headers={"appian-api-key": APPIAN_API_KEY})
+        # Use /package-zip endpoint per Appian docs (not /download)
+        pkg_url = status_data.get("packageZip", f"{url}/{deploy_uuid}/package-zip")
+        print(f"[DEBUG] Downloading from: {pkg_url}", file=sys.stderr)
+        download_resp = await client.get(pkg_url, headers={"appian-api-key": APPIAN_API_KEY})
+        if download_resp.status_code >= 400:
+            print(f"[DEBUG] Download failed: {download_resp.status_code} {download_resp.text[:500]}", file=sys.stderr)
         download_resp.raise_for_status()
         return download_resp.content
 
