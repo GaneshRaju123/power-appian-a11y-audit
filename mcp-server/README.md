@@ -97,3 +97,4 @@ Exported ZIPs are cached in `~/.appian-sail-cache/` so repeated queries don't re
 | `get_sail_code` | Get full SAIL definition of any object |
 | `search_objects` | Search by name, description, or code content |
 | `get_interfaces_using_component` | Find interfaces using a specific SAIL component |
+| `get_a11y_checklist` | Fetch the latest a11y checklist from Aurora Design System |

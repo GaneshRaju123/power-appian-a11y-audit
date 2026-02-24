@@ -1,4 +1,10 @@
-# Appian A11y SAIL Rules
+# Appian A11y SAIL Rules (Fallback)
+
+> **SOURCE OF TRUTH:** The authoritative checklist is maintained by the Appian Accessibility team in the Aurora Design System:
+> https://appian-design.github.io/aurora/accessibility/checklist/
+>
+> **Always call the `get_a11y_checklist` MCP tool first** to fetch the latest version.
+> This file is a fallback only — used when the Aurora checklist cannot be fetched (e.g., network issues).
 
 Complete Solutions A11y Checklist rules for automated SAIL analysis.
 

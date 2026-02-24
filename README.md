@@ -155,6 +155,7 @@ Each object is tagged with its app name so you can tell which app it belongs to 
 | `get_sail_code` | Get full SAIL definition of any object |
 | `search_objects` | Search by name, description, or code content |
 | `get_interfaces_using_component` | Find interfaces using a specific component |
+| `get_a11y_checklist` | Fetch the latest checklist from Aurora Design System |
 
 ---
 

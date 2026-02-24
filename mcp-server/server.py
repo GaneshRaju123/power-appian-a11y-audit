@@ -503,6 +503,74 @@ def get_interfaces_using_component(component: str) -> str:
 
     return f"Interfaces using {component} ({len(matches)}):\n" + "\n".join(sorted(matches))
 
+@mcp.tool()
+async def get_a11y_checklist() -> str:
+    """Fetch the latest accessibility checklist from the Aurora Design System.
+
+    Returns the live checklist from https://appian-design.github.io/aurora/accessibility/checklist/
+    This is the authoritative source maintained by the Appian Accessibility team.
+    Falls back to a cached version if the fetch fails.
+    """
+    import httpx
+
+    AURORA_URL = "https://appian-design.github.io/aurora/accessibility/checklist/"
+    cache_file = CACHE_DIR / "aurora-a11y-checklist.txt"
+
+    try:
+        async with httpx.AsyncClient(timeout=30) as client:
+            resp = await client.get(AURORA_URL)
+            resp.raise_for_status()
+            html = resp.text
+
+        # Parse the HTML to extract checklist rules as structured text
+        rules = _parse_aurora_checklist(html)
+        if rules:
+            cache_file.write_text(rules, encoding="utf-8")
+            return rules
+    except Exception as e:
+        print(f"[WARN] Failed to fetch Aurora checklist: {e}", file=sys.stderr)
+
+    # Fallback to cached version
+    if cache_file.exists():
+        print("[INFO] Using cached Aurora checklist", file=sys.stderr)
+        return cache_file.read_text(encoding="utf-8")
+
+    return "Error: Could not fetch Aurora checklist and no cached version available."
+
+
+def _parse_aurora_checklist(html: str) -> str:
+    """Parse the Aurora checklist HTML page into structured text rules."""
+    import re as _re
+
+    # The Aurora page outputs rules as text blocks with category headers.
+    # Strip HTML tags to get clean text, preserving structure.
+    # Remove script/style blocks
+    text = _re.sub(r'<script[^>]*>.*?</script>', '', html, flags=_re.DOTALL | _re.IGNORECASE)
+    text = _re.sub(r'<style[^>]*>.*?</style>', '', text, flags=_re.DOTALL | _re.IGNORECASE)
+    # Replace <br> and block-level tags with newlines
+    text = _re.sub(r'<br\s*/?>', '\n', text, flags=_re.IGNORECASE)
+    text = _re.sub(r'</(div|p|li|tr|h[1-6])>', '\n', text, flags=_re.IGNORECASE)
+    # Strip remaining tags
+    text = _re.sub(r'<[^>]+>', ' ', text)
+    # Decode common HTML entities
+    text = text.replace('&amp;', '&').replace('&lt;', '<').replace('&gt;', '>')
+    text = text.replace('&quot;', '"').replace('&#39;', "'").replace('&nbsp;', ' ')
+    # Collapse whitespace within lines but preserve line breaks
+    lines = []
+    for line in text.split('\n'):
+        cleaned = ' '.join(line.split())
+        if cleaned:
+            lines.append(cleaned)
+
+    result = '\n'.join(lines)
+    header = (
+        "# Appian A11y Checklist (Aurora Design System)\n"
+        "# Source: https://appian-design.github.io/aurora/accessibility/checklist/\n"
+        "# This is the authoritative checklist maintained by the Appian Accessibility team.\n\n"
+    )
+    return header + result
+
+
 
 if __name__ == "__main__":
     mcp.run()

@@ -52,6 +52,7 @@ The `appian-sail-source` MCP server provides:
 - `get_sail_code` — Get the full SAIL definition of any interface or expression rule
 - `search_objects` — Search objects by name, description, or code content
 - `get_interfaces_using_component` — Find all interfaces using a specific SAIL component
+- `get_a11y_checklist` — Fetch the latest accessibility checklist from the Aurora Design System
 
 ## How to Use
 
@@ -87,9 +88,20 @@ Find all interfaces using a!gridField in SourceSelection
 Full a11y audit for SourceSelection. Check Jira for past a11y bugs too.
 ```
 
+## Checklist Source
+
+The power fetches the latest accessibility checklist directly from the **Aurora Design System** at audit time:
+https://appian-design.github.io/aurora/accessibility/checklist/
+
+This is the authoritative checklist maintained by the Appian Accessibility team. When Kurt or the a11y team updates the checklist, the power automatically picks up the changes — no code changes needed.
+
+A static fallback (`steering/a11y-sail-rules.md`) is used only if the Aurora page can't be reached.
+
+Use the `get_a11y_checklist` MCP tool to fetch the latest checklist on demand.
+
 ## Rule Categories
 
-The power checks against these rule categories:
+The power checks against these rule categories (sourced from Aurora):
 - Form Inputs (labels, choiceLabels, inputPurpose)
 - Validations (required, validation messages)
 - Grids (label, rowHeader, column headers, accessibilityText)
