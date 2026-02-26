@@ -78,7 +78,8 @@ Example JQL patterns:
 Look for patterns matching components in the current interface.
 
 ### Step 5: Generate Report
-Structure as:
+Structure the report as shown below. **Always generate a Google Doc** with proper formatting (see Step 6). Also output a summary in chat.
+
 ```
 # A11y Audit Report — [Name]
 Application: [App Name]
@@ -115,8 +116,268 @@ Number each finding. Include:
 - Brief overall assessment
 ```
 
-### Step 6: Push to Google Docs (if requested)
-Use Google Workspace tools to create a formatted Google Doc.
+### Step 6: Generate Google Doc with Proper Formatting
+Always create a Google Doc for the audit report. Use Google Workspace MCP tools (`create_doc`, `modify_doc_text`, `update_paragraph_style`, `batch_update_doc`, `inspect_doc_structure`).
+
+#### Document Title
+Use `create_doc` with title matching the audit type (see templates below).
+
+#### Universal Bold Rules (apply to ALL audit types)
+These items MUST be bold using `modify_doc_text` with `bold: true`:
+
+1. **Labels "INPUT:" and "OUTPUT:"** — bold these header labels
+2. **Section headers**: "SCOPE", "PASSING ITEMS", "FINDINGS", "SUMMARY", "MUST FIX", "VERIFY", "WATCH OUT", "EXECUTIVE SUMMARY", "RECOMMENDATIONS" — bold
+3. **Passing item titles**: The full numbered line like "1. FM-01 — Form focusOnFirstInput" or "1. Forms — focusOnFirstInput: false"
+4. **Finding titles**: The full line like "Finding 1 — VM-02: Search Fields Have Hidden Labels (labelPosition: COLLAPSED)"
+5. **Finding field labels inside each finding** — bold these labels (not their values):
+   - "Severity: [level]" — bold the entire line
+   - "Aurora Rule:" or "Rule:" — bold the entire line (including the quoted rule text)
+   - "How To Test:" — bold just this label
+   - "Affected Interfaces:" or "Affected Interface:" — bold just this label
+   - "Component:" or "Components:" — bold just this label
+   - "Issue:" — bold just this label
+   - "Description:" — bold just this label
+   - "Recommendation:" or "Fix:" — bold just this label
+   - "Verify:" — bold just this label
+   - "Status:" — bold just this label
+   - "Matches Jira pattern:" — bold just this label
+6. **Summary stats**: Bold each stat line (e.g., "Total interfaces audited: 24", "Passing checks: 9", "Findings: 7", "Must Fix: 6 findings")
+7. **Sub-section headers within findings**: e.g., "Parent Form", "Step 1 — Search & Select Vendors", "Priority 1 — High Impact, Easy Fix:"
+8. **Watch/Watch Out item titles**: e.g., "Watch 1 — char(9) tab character usage"
+
+#### What NOT to Bold
+- Interface names in scope lists or affected interface bullets (plain text)
+- Description/Issue paragraph text after the label
+- Recommendation/Fix paragraph text after the label
+- Bullet items listing specific interfaces
+- Aurora rule quoted text when it appears as a standalone paragraph (only bold when preceded by "Aurora Rule:" or "Rule:" label)
+- The severity breakdown bullets under Summary
+
+#### Formatting Approach
+1. Insert ALL text content first using `modify_doc_text` (plain text, no formatting)
+2. Call `inspect_doc_structure` to get accurate character indices
+3. Apply bold formatting in a second pass using `modify_doc_text` with `bold: true` on the specific ranges
+4. Use `update_paragraph_style` with `list_type="UNORDERED"` for bullet lists
+5. Use `batch_update_doc` to combine multiple formatting operations and reduce API calls
+
+---
+
+#### Template A: Interface Level Audit (load app + audit interface)
+```
+INPUT:
+[user command]
+
+OUTPUT:
+A11y Audit Report — [Interface Name] ([Form Description])
+Application: [App Name]
+Audited By: Kiro AI Assistant
+Checklist Source: Aurora Design System (fetched live via get_a11y_checklist MCP tool)
+
+SCOPE
+[description]
+Parent Form
+• [interfaces]
+Step 1 — [Name]
+• [interfaces]
+Step 2 — [Name]
+• [interfaces]
+Total: X interfaces audited (recursive discovery from parent)
+
+PASSING ITEMS
+1. [Category] — [Rule Name]
+[Interface] — [evidence]. ✓
+Aurora Rule: "[quoted rule text]"
+How To Test: [Aurora how-to-test guidance] ✓
+
+FINDINGS
+Finding 1 — [Title]
+Severity: [High/Medium/Low]
+Aurora Rule: "[quoted rule text]"
+How To Test: [guidance]
+Affected Interfaces:
+• [interface] — [detail]
+Description: [paragraph]
+Recommendation: [paragraph with SAIL fix]
+
+SUMMARY
+Total interfaces audited: X
+Passing checks: X Aurora rule categories
+Findings: X
+Severity breakdown:
+• Medium: X (Findings N–M)
+• Low: X (Findings N–M)
+[Brief assessment paragraph]
+```
+
+#### Template B: Paste SAIL Directly
+```
+INPUT:
+Check this SAIL for accessibility issues
+(Pasted SAIL code: [brief description of what was pasted])
+
+OUTPUT:
+A11y Audit Report: [Interface/Component Name]
+Application: [App Name]
+Interface: [Name] (pasted SAIL code)
+Audited By: Kiro AI Assistant
+Checklist Source: Aurora Design System (fetched live via get_a11y_checklist MCP tool)
+
+SCOPE
+[description of what was audited, components identified]
+
+========================================
+MUST FIX (X Findings)
+========================================
+Finding 1 — [Title]
+Severity: Must Fix
+Aurora Rule: "[quoted rule text]"
+How To Test: [guidance]
+Component: [component name]
+Issue: [description]
+Fix: [concrete SAIL fix]
+
+========================================
+VERIFY (Manual Testing Required — X Items)
+========================================
+Finding N — [Title]
+Aurora Rule: "[quoted rule text]"
+How To Test: [guidance]
+Components: [list]
+Issue: [description]
+Verify: [what to check]
+
+========================================
+WATCH OUT (X Patterns to Monitor)
+========================================
+Watch 1 — [Title]
+Component: [name]
+Issue: [description]
+Recommendation: [guidance]
+
+========================================
+SUMMARY
+========================================
+Must Fix: X findings
+Verify: X items
+Watch: X patterns
+Top 3 Priority Fixes:
+1. [fix]
+2. [fix]
+3. [fix]
+Positive Patterns Found:
+• [good pattern]
+```
+
+#### Template C: Mockup Level Audit
+Same structure as Template B (MUST FIX / VERIFY / WATCH OUT sections) but:
+- Audit Type line: "Audit Type: Mockup Screenshot Analysis"
+- SCOPE describes visual components identified in the screenshot
+- Each finding includes "SAIL Fix:" instead of just "Fix:" (since code hasn't been written yet)
+- Add a final section: "SAIL Rules to Reference During Build (Aurora):" with bullet list of applicable rule categories
+
+#### Template D: Find Component Usage (e.g., all grids)
+```
+INPUT:
+[user command]
+
+OUTPUT:
+[App] [Component] A11y Audit — All X [component] Interfaces
+Application: [App Name]
+Audited By: Kiro AI Assistant
+Checklist Source: Aurora Design System (fetched live via get_a11y_checklist MCP tool)
+Scope: All X interfaces containing [component]
+
+EXECUTIVE SUMMARY
+X interfaces audited. Y total findings.
+By severity:
+• MUST FIX: X findings
+• VERIFY: X findings
+• WATCH OUT: X findings
+Most common issues:
+• [issue]: X interfaces
+• [issue]: X interfaces
+
+SECTION 1: MUST FIX — Code Changes Required
+1.1 [Issue Category] (X interfaces)
+Aurora Rule: "[quoted rule text]"
+How To Test: [guidance]
+• [interface] — [detail]
+FIX: [guidance]
+
+SECTION 2: VERIFY — Needs Manual/Visual Check
+2.1 [Issue Category] (X interfaces)
+Aurora Rule: "[quoted rule text]"
+How To Test: [guidance]
+VERIFY: [what to check]
+
+SECTION 3: WATCH OUT — Acceptable but Worth Noting
+3.1 [Pattern] (X interfaces)
+[list of interfaces]
+3.2 Good Patterns Found
+• [interface] — [what's good]
+
+SECTION 4: INTERFACE-BY-INTERFACE SUMMARY
+1. [Interface] — [brief findings list]
+
+SECTION 5: RECOMMENDED FIX PRIORITY
+Priority 1 — High Impact, Easy Fix:
+• [fix]
+Priority 2 — Medium Impact:
+• [fix]
+CLEANEST INTERFACES (use as reference):
+1. [interface] — [why it's clean]
+```
+
+#### Template E: Jira History Cross-Reference
+```
+INPUT:
+[user command]
+
+OUTPUT:
+[App] A11y Audit — Jira [Project] Cross-Reference Report
+Application: [App Name]
+Audited By: Kiro AI Assistant
+Checklist Source: Aurora Design System (fetched live via get_a11y_checklist MCP tool)
+Scope: Top N Jira bug categories cross-referenced against current SAIL code
+
+EXECUTIVE SUMMARY
+[Jira stats and top bug categories]
+
+SECTION 1: [CATEGORY 1] — X Jira Bugs vs Current Code
+Jira Bug History:
+• [JIRA-ID] ([Status]): [description]
+
+Current Code Findings — STILL PRESENT:
+[MUST-FIX] [Interface]
+Aurora Rule: "[quoted rule text]"
+How To Test: [guidance]
+[description]
+Matches Jira pattern: [JIRA-IDs]
+Fix: [guidance]
+
+[GOOD] [Interface]
+[description of what's properly fixed]
+
+[Category] Summary:
+• X interfaces with MUST-FIX issues
+• X interfaces properly fixed
+• X total interfaces use [component]
+
+SECTION N: CROSS-REFERENCE MATRIX
+[JIRA-ID] → [Pattern] → [Status in Current Code]
+
+SECTION N+1: NET-NEW FINDINGS (Never Filed in Jira)
+• [finding] — X interfaces — [IMPACT]
+
+SECTION N+2: RECOMMENDATIONS
+Priority 1 — Fix Immediately:
+1. [fix]
+Estimated Effort:
+• Priority 1: X days
+```
+
+#### Sharing
+After creating the doc, share it with the user (ganesh.raju@appian.com for GSS team).
 
 ## Workflow: Mockup Screenshot Audit
 
