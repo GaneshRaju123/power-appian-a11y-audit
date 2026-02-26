@@ -20,7 +20,7 @@ The authoritative accessibility checklist lives in the Aurora Design System, mai
 - Call `get_a11y_checklist` to get the current Aurora checklist rules
 - This ensures you're always auditing against the latest version Kurt and the a11y team maintain
 
-### Step 2: Get the SAIL Code
+### Step 2: Get the SAIL Code — Including All Child Interfaces
 - If user provides an interface name and app: use the appian-sail-source MCP server
   - First call `load_application` with the app UUID or local ZIP path
   - Then call `get_sail_code` with the interface name
@@ -30,8 +30,20 @@ The authoritative accessibility checklist lives in the Aurora Design System, mai
 - If user provides a Google Doc/Drive link: fetch the SAIL from there
 - Fallback: If no live connection or ZIP is available, ask the user to paste SAIL code directly
 
-### Step 3: Analyze SAIL Against Rules
-Using the rules fetched from Aurora, for each component found in the SAIL code, systematically check every applicable rule.
+#### CRITICAL: Recursive Child Interface Discovery
+**Do NOT stop at the parent interface.** Appian forms delegate rendering to child interfaces. The parent is often just a shell with local variables and data fetching — the actual inputs, grids, cards, icons, and interactive components live in child interfaces.
+
+After getting the parent SAIL code:
+1. **Identify child interfaces** — look for UUID references (e.g., `#"_a-xxxx-yyyy_12345"(...)`) that pass parameters like `bundle`, `pagingInfo`, `selectedVendorsMap`, etc. These are calls to child interfaces.
+2. **Search for related interfaces** — call `search_objects` with the parent interface's name prefix (e.g., if parent is `AS_GSS_FM_addVendors`, search for `addVendor` to find all related interfaces).
+3. **Get SAIL code for every child** — call `get_sail_code` for each child interface found. Do this in batches if there are many.
+4. **Recurse into grandchildren** — if a child interface also delegates to further children, get those too. Continue until you reach leaf interfaces that contain actual SAIL components.
+5. **Track the full interface tree** — maintain a list of all interfaces audited and their parent-child relationships for the report scope section.
+
+The goal is to audit the **entire form flow**, not just the top-level wrapper. A typical Appian form may have 10-30 child interfaces. Audit all of them.
+
+### Step 3: Analyze SAIL Against Rules — Full Depth
+Using the rules fetched from Aurora, audit **every interface** in the tree (parent + all children). For each component found in any interface's SAIL code, systematically check every applicable rule.
 
 Priority order:
 1. Check `label` parameter exists and is not null on all inputs, grids, charts, file uploads
@@ -42,6 +54,17 @@ Priority order:
 6. Check buttons have `accessibilityText` (especially icon-only buttons)
 7. Check for forbidden `a!dateTimeField` usage
 8. Check all remaining SAIL-testable rules
+
+For each finding, include:
+- The **specific child interface name** where the issue was found (not just the parent)
+- The **exact parameter** that is missing or incorrect
+- The **Aurora rule** it violates (with the "How To Test" guidance from Aurora)
+- A **concrete fix** with SAIL code suggestion
+
+For each passing check, include:
+- The **interface name** and **component** that passes
+- The **rule** it satisfies
+- Brief evidence (e.g., "label: 'Search Vendors', labelPosition: 'ABOVE'")
 
 ### Step 4: Query Jira for Historical Bugs
 If Jira MCP is available, search for past a11y bugs. Determine the Jira project key based on the application being audited:
@@ -58,11 +81,38 @@ Look for patterns matching components in the current interface.
 Structure as:
 ```
 # A11y Audit Report — [Name]
-## Summary (X findings, Y manual checks, Z historical patterns)
-## Automated SAIL Findings (Must Fix) — with rule category, component, fix
-## Manual Checks Required (Verify) — with rule category, what to check, how
-## Historical Bug Patterns (Watch Out) — Jira tickets, what went wrong
-## Component A11y Summary — all rules per component type
+Application: [App Name]
+Audited By: Kiro AI Assistant
+
+## SCOPE
+List the entire interface tree audited, organized by form flow:
+- Parent Form (interface names)
+- Step 1 — [Step Name] (all child interfaces)
+- Step 2 — [Step Name] (all child interfaces)
+- Shared/Utility (any cross-cutting interfaces)
+Total: X interfaces audited
+
+## PASSING ITEMS
+Number each passing check. Include:
+- Rule ID and name
+- Interface name where it passes
+- Brief evidence (parameter value, component used)
+
+## FINDINGS
+Number each finding. Include:
+- Finding title with rule ID
+- Severity: High / Medium / Low
+- Rule: Full Aurora rule text
+- Affected Interfaces: list each interface name
+- Description: what's wrong, with specific parameter details
+- Recommendation: concrete fix with SAIL code if possible
+
+## SUMMARY
+- Total interfaces audited
+- Passing checks count
+- Findings count
+- Severity breakdown (High / Medium / Low)
+- Brief overall assessment
 ```
 
 ### Step 6: Push to Google Docs (if requested)
