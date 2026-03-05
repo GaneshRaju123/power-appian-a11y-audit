@@ -43,6 +43,19 @@ Load application from ~/exports/CaseManagement.zip with name CaseManagement
 ```
 All loaded objects stay in memory. You can search and audit across all loaded apps.
 
+### Force Refresh
+By default, the server caches exported ZIPs in `~/.appian-sail-cache/` to avoid re-exporting on every load. To force a fresh export from your live Appian environment (e.g., after deploying new changes):
+```
+Load application with UUID _a-xxxx-yyyy, name SourceSelection, and force_refresh=true
+```
+This clears the cached ZIP for that app and re-exports from the live environment.
+
+### Caching
+- Exported ZIPs are cached at `~/.appian-sail-cache/`
+- On startup, the server auto-loads any cached ZIPs matching your configured app
+- Delete files from this folder to manually clear the cache
+- Use `force_refresh=true` on `load_application` to clear and re-export programmatically
+
 ## MCP Server Tools
 
 The `appian-sail-source` MCP server provides:
@@ -93,11 +106,42 @@ Full a11y audit for SourceSelection. Check Jira for past a11y bugs too.
 The power fetches the latest accessibility checklist directly from the **Aurora Design System** at audit time:
 https://appian-design.github.io/aurora/accessibility/checklist/
 
-This is the authoritative checklist maintained by the Appian Accessibility team. When Kurt or the a11y team updates the checklist, the power automatically picks up the changes — no code changes needed.
+This is the authoritative checklist maintained by the Appian Accessibility team. When the a11y team updates the checklist, the power automatically picks up the changes — no code changes needed.
 
 A static fallback (`steering/a11y-sail-rules.md`) is used only if the Aurora page can't be reached.
 
 Use the `get_a11y_checklist` MCP tool to fetch the latest checklist on demand.
+
+## Parsed vs Skipped Object Types
+
+The MCP server parses Appian export ZIPs and extracts SAIL definitions from XML files. Not all object types in an Appian application are relevant for SAIL auditing.
+
+### Parsed (extracted and available for auditing)
+| Object Type | Export Folder |
+|-------------|---------------|
+| Interfaces | `content/` |
+| Expression Rules | `content/` |
+| Constants | `content/` |
+| Decisions | `content/` |
+| Integrations | `content/` |
+| Process Models | `processModel/` |
+| Record Types | `recordType/` |
+| Web APIs | `webApi/` |
+| Connected Systems | `connectedSystem/` |
+| Data Stores | `dataStore/` |
+| Sites | `site/` |
+
+### Skipped (not relevant for SAIL auditing)
+| Object Type | Reason |
+|-------------|--------|
+| CDTs (Data Types) | `.xsd` files, not XML with SAIL definitions |
+| Groups | Structural/permissions only |
+| Folders | Structural only |
+| Documents | Binary files (images, PDFs, etc.) |
+| AI Skills / AI Agents | Not SAIL-based |
+| Application Metadata | App-level config, not auditable |
+
+> This means the loaded object count will be lower than what Appian Designer shows, since Designer counts all object types including groups, folders, documents, and CDTs.
 
 ## Rule Categories
 

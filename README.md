@@ -102,6 +102,11 @@ Find all interfaces using a!gridField in SourceSelection
 Full a11y audit for SourceSelection. Check Jira too.
 ```
 
+**Force refresh to pick up latest changes:**
+```
+Load application with UUID _a-xxxx-yyyy, name SourceSelection, and force_refresh=true
+```
+
 > You can load multiple apps in the same session. All objects stay in memory.
 
 ---
@@ -143,6 +148,41 @@ Each object is tagged with its app name so you can tell which app it belongs to 
 | File Upload | label, instructions |
 | Charts | label, data table alternative |
 | Dynamic Content | messageBanner, announceBehavior |
+
+---
+
+## Caching & Force Refresh
+
+Exported ZIPs are cached in `~/.appian-sail-cache/` so repeated loads don't re-export from Appian. On startup, the server auto-loads any cached ZIPs matching your configured app.
+
+To force a fresh export (e.g., after deploying changes):
+```
+Load application with UUID _a-xxxx-yyyy, name SourceSelection, and force_refresh=true
+```
+
+To manually clear the cache, delete files from `~/.appian-sail-cache/`.
+
+---
+
+## Parsed vs Skipped Object Types
+
+The server parses XML files from Appian export ZIPs. Some object types are skipped because they aren't relevant for SAIL auditing.
+
+| Parsed | Skipped |
+|--------|---------|
+| Interfaces | CDTs (`.xsd` files) |
+| Expression Rules | Groups |
+| Constants | Folders |
+| Decisions | Documents (binary) |
+| Integrations | AI Skills / AI Agents |
+| Process Models | Application Metadata |
+| Record Types | |
+| Web APIs | |
+| Connected Systems | |
+| Data Stores | |
+| Sites | |
+
+> The loaded object count will be lower than Appian Designer's count, since Designer includes groups, folders, documents, and CDTs.
 
 ---
 

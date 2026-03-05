@@ -86,7 +86,32 @@ Add to your `~/.kiro/settings/mcp.json`:
 
 ## Caching
 
-Exported ZIPs are cached in `~/.appian-sail-cache/` so repeated queries don't re-export. Delete files from this folder to force a fresh export.
+Exported ZIPs are cached in `~/.appian-sail-cache/` so repeated queries don't re-export. On startup, the server auto-loads any cached ZIPs matching the configured app.
+
+To force a fresh export (bypasses cache):
+```
+Load application with UUID _a-xxxx-yyyy, name SourceSelection, and force_refresh=true
+```
+
+Or delete files from `~/.appian-sail-cache/` to manually clear the cache.
+
+## Parsed vs Skipped Object Types
+
+The server extracts SAIL definitions from XML files in the export ZIP. Not all Appian object types are parsed:
+
+| Parsed | Skipped |
+|--------|---------|
+| Interfaces | CDTs (`.xsd` files) |
+| Expression Rules | Groups |
+| Constants | Folders |
+| Decisions | Documents (binary) |
+| Integrations | AI Skills / AI Agents |
+| Process Models | Application Metadata |
+| Record Types | |
+| Web APIs | |
+| Connected Systems | |
+| Data Stores | |
+| Sites | |
 
 ## Tools Provided
 

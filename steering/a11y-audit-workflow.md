@@ -18,7 +18,7 @@ The authoritative accessibility checklist lives in the Aurora Design System, mai
 
 ### Step 1: Fetch the Latest Checklist
 - Call `get_a11y_checklist` to get the current Aurora checklist rules
-- This ensures you're always auditing against the latest version Kurt and the a11y team maintain
+- This ensures you're always auditing against the latest version the a11y team maintains
 
 ### Step 2: Get the SAIL Code — Including All Child Interfaces
 - If user provides an interface name and app: use the appian-sail-source MCP server
