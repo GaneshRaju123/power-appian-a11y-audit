@@ -326,10 +326,27 @@ def _load_from_cache(app_uuid: str, app_name: str) -> bool:
     return False
 
 
-async def _ensure_loaded(app_uuid: str, app_name: str = "app"):
+async def _ensure_loaded(app_uuid: str, app_name: str = "app", force_refresh: bool = False):
+    """Load an application, optionally forcing a fresh export from Appian.
+
+    When force_refresh=True, clears cached data for this app and re-exports
+    from the live Appian environment to get the latest SAIL code.
+    """
+    if force_refresh:
+        # Clear in-memory objects for this app
+        stale_keys = [k for k, v in _objects.items() if v.get("app") == app_name]
+        for k in stale_keys:
+            del _objects[k]
+        _loaded_apps.discard(app_uuid)
+        # Delete cached ZIP so we re-export
+        cp = _cache_path(app_uuid)
+        if cp.exists():
+            cp.unlink()
+        print(f"[INFO] Force refresh: cleared cache for {app_name} ({app_uuid})", file=sys.stderr)
+
     if app_uuid in _loaded_apps:
         return
-    if _load_from_cache(app_uuid, app_name):
+    if not force_refresh and _load_from_cache(app_uuid, app_name):
         return
     zip_bytes = await _export_application(app_uuid)
     _cache_path(app_uuid).write_bytes(zip_bytes)
@@ -377,11 +394,24 @@ mcp = FastMCP("appian-sail-source")
 
 
 @mcp.tool()
-async def load_application(app_uuid: str = "", app_name: str = "app", local_zip: str = "") -> str:
-    """Export and load an Appian application by UUID, or load from a local ZIP file."""
+async def load_application(app_uuid: str = "", app_name: str = "app", local_zip: str = "", force_refresh: bool = False) -> str:
+    """Export and load an Appian application by UUID, or load from a local ZIP file.
+
+    Set force_refresh=True to re-export from the live Appian environment,
+    ignoring any cached data. This ensures you get the latest SAIL code
+    after developers have saved changes in Appian Designer.
+
+    By default (force_refresh=False), uses cached data if available.
+    """
     if local_zip:
+        if force_refresh:
+            # Clear any previously loaded objects from this ZIP
+            stale_keys = [k for k, v in _objects.items() if v.get("app") == app_name]
+            for k in stale_keys:
+                del _objects[k]
+            _loaded_apps.discard(f"local:{Path(local_zip).expanduser().name}")
         count = _load_local_zip(local_zip, app_name)
-        return f"Loaded {count} objects from local ZIP: {local_zip}"
+        return f"Loaded {count} objects from local ZIP: {local_zip}" + (" (force refreshed)" if force_refresh else "")
 
     uuid = app_uuid or APPIAN_APP_UUID
     if not uuid:
@@ -389,9 +419,10 @@ async def load_application(app_uuid: str = "", app_name: str = "app", local_zip:
     if not APPIAN_URL or not APPIAN_API_KEY:
         return "Error: Set APPIAN_URL and APPIAN_API_KEY env vars for live export."
 
-    await _ensure_loaded(uuid, app_name)
+    await _ensure_loaded(uuid, app_name, force_refresh=force_refresh)
     count = sum(1 for o in _objects.values() if o.get("app") == app_name)
-    return f"Loaded {count} objects from application '{app_name}' ({uuid})."
+    source = "live export (force refreshed)" if force_refresh else "cache or live export"
+    return f"Loaded {count} objects from application '{app_name}' ({uuid}) via {source}."
 
 
 @mcp.tool()
