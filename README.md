@@ -68,8 +68,6 @@ After configuring, go to **MCP Servers** panel → find `appian-sail-source` →
 - **Kiro IDE** installed
 - Appian environment access (Options A/B only)
 
-> Dependencies (`mcp`, `httpx`) auto-install in an isolated venv on first run. No manual pip install needed.
-
 ### Recommended MCP Servers (User-Level)
 
 These are configured in your **global** Kiro MCP config (`~/.kiro/settings/mcp.json`), not in the power itself. They unlock additional audit features:
