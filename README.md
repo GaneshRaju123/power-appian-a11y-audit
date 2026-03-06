@@ -70,6 +70,17 @@ After configuring, go to **MCP Servers** panel → find `appian-sail-source` →
 
 > Dependencies (`mcp`, `httpx`) auto-install in an isolated venv on first run. No manual pip install needed.
 
+### Recommended MCP Servers (User-Level)
+
+These are configured in your **global** Kiro MCP config (`~/.kiro/settings/mcp.json`), not in the power itself. They unlock additional audit features:
+
+| MCP Server | What It Enables | Required? |
+|------------|----------------|-----------|
+| **Jira** | Cross-reference historical a11y bugs from Jira projects | Optional — audit works without it, skips Jira section |
+| **Google Workspace** | Auto-generate formatted Google Doc audit reports | Optional — report stays in chat without it |
+
+> Without these servers, the power still performs full SAIL code auditing and mockup analysis. The Jira and Google Doc features gracefully degrade.
+
 ---
 
 ## Example Usage
