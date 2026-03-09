@@ -251,12 +251,22 @@ These are configured in your **global** Kiro MCP config (`~/.kiro/settings/mcp.j
 
 ## Example Usage
 
-**Audit a specific interface:**
+**Audit a specific interface (uses default app from env vars):**
+```
+Audit AS_GSS_FM_addVendors
+```
+
+**Audit after loading a specific app:**
 ```
 Load SourceSelection and audit AS_GSS_FM_addVendors
 ```
 
-**Switch between apps:**
+**Audit with force refresh (picks up newly created/modified interfaces):**
+```
+Load application with UUID _a-xxxx-yyyy, force_refresh=true, and audit AS_GSS_FM_addVendors
+```
+
+**Switch apps and audit:**
 ```
 Load CaseManagementStudio and audit AS_CMS_FM_createCase
 ```
@@ -274,14 +284,9 @@ Check this SAIL for accessibility issues
 Find all interfaces using a!gridField in SourceSelection
 ```
 
-**Full audit with Jira history:**
+**Full audit with Jira cross-reference:**
 ```
 Full a11y audit for SourceSelection. Check Jira too.
-```
-
-**Force refresh to pick up latest changes:**
-```
-Load application with UUID _a-xxxx-yyyy, name SourceSelection, and force_refresh=true
 ```
 
 > You can load multiple apps in the same session. All objects stay in memory.
