@@ -36,24 +36,29 @@ When you install via the Kiro Powers tab, Kiro clones the repo and generates an 
 
 ### Where does Kiro clone powers?
 
-Kiro clones powers to:
+Kiro clones powers to `~/.kiro/powers/repos/`:
 
 | OS | Default Location |
 |----|-----------------|
-| macOS | `~/.kiro/powers/power-appian-a11y-audit/` |
-| Linux | `~/.kiro/powers/power-appian-a11y-audit/` |
-| Windows | `%USERPROFILE%\.kiro\powers\power-appian-a11y-audit\` |
+| macOS | `~/.kiro/powers/repos/power-appian-a11y-audit/` |
+| Linux | `~/.kiro/powers/repos/power-appian-a11y-audit/` |
+| Windows | `%USERPROFILE%\.kiro\powers\repos\power-appian-a11y-audit\` |
+
+So the full path to `server.py` would be:
+```
+~/.kiro/powers/repos/power-appian-a11y-audit/mcp-server/server.py
+```
 
 ### How to find and fix the path
 
 1. Open your MCP config: `~/.kiro/settings/mcp.json`
-2. Look for the `appian-sail-source` server entry
-3. Check that the path in `args` points to the actual `server.py` location
+2. Look for the `appian-sail-source` server entry — it'll be under `powers.mcpServers`
+3. The last value in `args` is the path to `server.py` — check that it's correct
 4. Run this in your terminal to confirm the clone location:
 
 ```bash
 # macOS / Linux
-find ~/.kiro -name "server.py" -path "*/a11y*" 2>/dev/null
+find ~/.kiro/powers -name "server.py" -path "*a11y*" 2>/dev/null
 ```
 
 5. Update the path in your MCP config if needed

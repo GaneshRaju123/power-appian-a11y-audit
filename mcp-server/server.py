@@ -48,6 +48,7 @@ def _ensure_dependencies():
 _ensure_dependencies()
 
 from mcp.server.fastmcp import FastMCP
+import httpx  # needed for get_a11y_checklist and _export_application
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -542,8 +543,6 @@ async def get_a11y_checklist() -> str:
     This is the authoritative source maintained by the Appian Accessibility team.
     Falls back to a cached version if the fetch fails.
     """
-    import httpx
-
     AURORA_URL = "https://appian-design.github.io/aurora/accessibility/checklist/"
     cache_file = CACHE_DIR / "aurora-a11y-checklist.txt"
 
@@ -571,18 +570,16 @@ async def get_a11y_checklist() -> str:
 
 def _parse_aurora_checklist(html: str) -> str:
     """Parse the Aurora checklist HTML page into structured text rules."""
-    import re as _re
-
     # The Aurora page outputs rules as text blocks with category headers.
     # Strip HTML tags to get clean text, preserving structure.
     # Remove script/style blocks
-    text = _re.sub(r'<script[^>]*>.*?</script>', '', html, flags=_re.DOTALL | _re.IGNORECASE)
-    text = _re.sub(r'<style[^>]*>.*?</style>', '', text, flags=_re.DOTALL | _re.IGNORECASE)
+    text = re.sub(r'<script[^>]*>.*?</script>', '', html, flags=re.DOTALL | re.IGNORECASE)
+    text = re.sub(r'<style[^>]*>.*?</style>', '', text, flags=re.DOTALL | re.IGNORECASE)
     # Replace <br> and block-level tags with newlines
-    text = _re.sub(r'<br\s*/?>', '\n', text, flags=_re.IGNORECASE)
-    text = _re.sub(r'</(div|p|li|tr|h[1-6])>', '\n', text, flags=_re.IGNORECASE)
+    text = re.sub(r'<br\s*/?>', '\n', text, flags=re.IGNORECASE)
+    text = re.sub(r'</(div|p|li|tr|h[1-6])>', '\n', text, flags=re.IGNORECASE)
     # Strip remaining tags
-    text = _re.sub(r'<[^>]+>', ' ', text)
+    text = re.sub(r'<[^>]+>', ' ', text)
     # Decode common HTML entities
     text = text.replace('&amp;', '&').replace('&lt;', '<').replace('&gt;', '>')
     text = text.replace('&quot;', '"').replace('&#39;', "'").replace('&nbsp;', ' ')

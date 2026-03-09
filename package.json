@@ -2,7 +2,7 @@
   "name": "power-appian-a11y-audit",
   "displayName": "Appian A11y Audit",
   "version": "2.1.0",
-  "description": "Accessibility audit assistant for Appian SAIL interfaces. Includes its own MCP server to pull SAIL code directly from Appian environments. Analyzes mockup screenshots and SAIL code against the Solutions A11y Checklist, cross-references Jira bugs, and generates audit reports.",
+  "description": "Accessibility audit assistant for Appian SAIL interfaces. Loads applications by UUID, pulls SAIL code directly from Appian environments, and audits interfaces against the Solutions A11y Checklist (50+ rules). No other power needed for loading apps or retrieving SAIL code when auditing.",
   "keywords": [
     "appian",
     "accessibility",
@@ -16,7 +16,12 @@
     "screen reader",
     "aria",
     "label",
-    "source selection"
+    "source selection",
+    "load application",
+    "uuid",
+    "interface",
+    "sail code",
+    "force_refresh"
   ],
   "author": "Ganesh Raju",
   "private": true,
