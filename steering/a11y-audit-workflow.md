@@ -81,7 +81,9 @@ Example JQL patterns:
 Look for patterns matching components in the current interface.
 
 ### Step 5: Generate Report
-Structure the report as shown below. **Always generate a Google Doc** with proper formatting (see Step 6). Also output a summary in chat.
+Structure the report as shown below. **You MUST ALWAYS generate a Google Doc automatically** — do NOT just output the report in chat. Create the Google Doc first, then provide a brief summary in chat with the doc link. This is NOT optional and does NOT require the user to ask for it. Every audit ends with a Google Doc.
+
+**MANDATORY**: After completing the analysis, immediately proceed to Step 6 to create the Google Doc. Do not wait for the user to request it.
 
 ```
 # A11y Audit Report — [Name]
@@ -119,8 +121,10 @@ Number each finding. Include:
 - Brief overall assessment
 ```
 
-### Step 6: Generate Google Doc with Proper Formatting
-Always create a Google Doc for the audit report. Use Google Workspace MCP tools (`create_doc`, `modify_doc_text`, `update_paragraph_style`, `batch_update_doc`, `inspect_doc_structure`).
+### Step 6: Generate Google Doc with Proper Formatting (MANDATORY — ALWAYS EXECUTE)
+**This step is NOT optional.** Every audit MUST produce a Google Doc. Do not skip this step. Do not ask the user if they want a doc. Just create it.
+
+Use Google Workspace MCP tools (`create_doc`, `modify_doc_text`, `update_paragraph_style`, `batch_update_doc`, `inspect_doc_structure`).
 
 #### Document Title
 Use `create_doc` with title matching the audit type (see templates below).
@@ -415,3 +419,11 @@ Output a checkbox list the developer can use while building.
 - **MUST FIX**: SAIL-testable rule violations found in code
 - **VERIFY**: Manual checks needing human/screen reader/tool testing
 - **WATCH OUT**: Patterns that caused bugs before
+
+## CRITICAL REMINDER
+After completing ANY audit (SAIL code, mockup, component scan, or Jira cross-reference), you MUST:
+1. Create a Google Doc with the full formatted report (Step 6)
+2. Share it with the user
+3. Provide a brief summary in chat with the doc link
+
+Do NOT output the full report only in chat. The Google Doc is the primary deliverable.

@@ -334,8 +334,8 @@ async def _ensure_loaded(app_uuid: str, app_name: str = "app", force_refresh: bo
     from the live Appian environment to get the latest SAIL code.
     """
     if force_refresh:
-        # Clear in-memory objects for this app
-        stale_keys = [k for k, v in _objects.items() if v.get("app") == app_name]
+        # Clear in-memory objects for this app (match by app name OR by UUID as app name)
+        stale_keys = [k for k, v in _objects.items() if v.get("app") in (app_name, app_uuid)]
         for k in stale_keys:
             del _objects[k]
         _loaded_apps.discard(app_uuid)
@@ -343,13 +343,19 @@ async def _ensure_loaded(app_uuid: str, app_name: str = "app", force_refresh: bo
         cp = _cache_path(app_uuid)
         if cp.exists():
             cp.unlink()
-        print(f"[INFO] Force refresh: cleared cache for {app_name} ({app_uuid})", file=sys.stderr)
+        print(f"[INFO] Force refresh: cleared cache for {app_name} ({app_uuid}), removed {len(stale_keys)} stale objects", file=sys.stderr)
 
     if app_uuid in _loaded_apps:
         return
     if not force_refresh and _load_from_cache(app_uuid, app_name):
         return
-    zip_bytes = await _export_application(app_uuid)
+    try:
+        zip_bytes = await _export_application(app_uuid)
+    except Exception as e:
+        print(f"[ERROR] Export failed: {e}", file=sys.stderr)
+        raise RuntimeError(f"Failed to export application from Appian: {e}")
+    if not zip_bytes or len(zip_bytes) < 100:
+        raise RuntimeError(f"Export returned empty or invalid ZIP ({len(zip_bytes) if zip_bytes else 0} bytes)")
     _cache_path(app_uuid).write_bytes(zip_bytes)
     _objects.update(_parse_zip(zip_bytes, app_name))
     _loaded_apps.add(app_uuid)
@@ -369,7 +375,13 @@ def _load_preexisting_cache():
     for zp in CACHE_DIR.glob("*.zip"):
         app_id = zp.stem
         if app_id not in _loaded_apps:
-            _objects.update(_parse_zip(zp.read_bytes(), app_id))
+            # Use APPIAN_APP_NAME env var if this ZIP matches the configured UUID,
+            # otherwise fall back to the UUID as the app name
+            if app_id == APPIAN_APP_UUID and os.environ.get("APPIAN_APP_NAME"):
+                name = os.environ["APPIAN_APP_NAME"]
+            else:
+                name = app_id
+            _objects.update(_parse_zip(zp.read_bytes(), name))
             _loaded_apps.add(app_id)
 
 
@@ -418,10 +430,17 @@ async def load_application(app_uuid: str = "", app_name: str = "app", local_zip:
     if not uuid:
         return "Error: Provide app_uuid or set APPIAN_APP_UUID env var."
     if not APPIAN_URL or not APPIAN_API_KEY:
+        # No live connection — try loading from cache with correct app name
+        if _load_from_cache(uuid, app_name):
+            count = sum(1 for o in _objects.values() if o.get("app") == app_name)
+            return f"Loaded {count} objects from application '{app_name}' ({uuid}) from cache (no live connection)."
         return "Error: Set APPIAN_URL and APPIAN_API_KEY env vars for live export."
 
-    await _ensure_loaded(uuid, app_name, force_refresh=force_refresh)
-    count = sum(1 for o in _objects.values() if o.get("app") == app_name)
+    try:
+        await _ensure_loaded(uuid, app_name, force_refresh=force_refresh)
+    except RuntimeError as e:
+        return f"Error loading application: {e}"
+    count = sum(1 for o in _objects.values() if o.get("app") in (app_name, uuid))
     source = "live export (force refreshed)" if force_refresh else "cache or live export"
     return f"Loaded {count} objects from application '{app_name}' ({uuid}) via {source}."
 
