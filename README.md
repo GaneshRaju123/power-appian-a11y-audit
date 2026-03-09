@@ -30,6 +30,45 @@ https://github.com/GaneshRaju123/power-appian-a11y-audit
 
 ---
 
+## Troubleshooting: Power Installation Path
+
+When you install via the Kiro Powers tab, Kiro clones the repo and generates an MCP config with absolute paths. If the MCP server fails to connect, the most common issue is the path being wrong.
+
+### Where does Kiro clone powers?
+
+Kiro clones powers to:
+
+| OS | Default Location |
+|----|-----------------|
+| macOS | `~/.kiro/powers/power-appian-a11y-audit/` |
+| Linux | `~/.kiro/powers/power-appian-a11y-audit/` |
+| Windows | `%USERPROFILE%\.kiro\powers\power-appian-a11y-audit\` |
+
+### How to find and fix the path
+
+1. Open your MCP config: `~/.kiro/settings/mcp.json`
+2. Look for the `appian-sail-source` server entry
+3. Check that the path in `args` points to the actual `server.py` location
+4. Run this in your terminal to confirm the clone location:
+
+```bash
+# macOS / Linux
+find ~/.kiro -name "server.py" -path "*/a11y*" 2>/dev/null
+```
+
+5. Update the path in your MCP config if needed
+6. Go to **MCP Servers** panel → click **Reconnect**
+
+### Common errors and fixes
+
+| Error | Fix |
+|-------|-----|
+| `No such file or directory` | The path to `server.py` or `run.sh` is wrong. Use the `find` command above to locate it. |
+| `uv: command not found` | Install uv: `brew install uv` (macOS) or `curl -LsSf https://astral.sh/uv/install.sh \| sh` (Linux). Then use the full path from `which uv`. |
+| `python3.12 not found` | Change `--python 3.12` to your installed version (`3.10`, `3.11`, `3.13`). Check with `python3 --version`. |
+
+---
+
 ## Setup
 
 After installing, click **Open Power Config** and fill in your env vars:
@@ -59,6 +98,130 @@ After installing, click **Open Power Config** and fill in your env vars:
 No setup needed. Just paste SAIL code into Kiro chat.
 
 After configuring, go to **MCP Servers** panel → find `appian-sail-source` → click **Reconnect**.
+
+---
+
+## Setup on Another System (Clone)
+
+If you're setting this up on a new machine (not via the Kiro Powers tab), follow these steps:
+
+### 1. Clone the repo
+
+```bash
+git clone https://github.com/GaneshRaju123/power-appian-a11y-audit.git
+cd power-appian-a11y-audit
+```
+
+### 2. Install uv (Python package runner)
+
+```bash
+# macOS (Homebrew)
+brew install uv
+
+# Linux / WSL
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Verify
+which uv
+```
+
+### 3. Add the MCP server to your Kiro config
+
+Open `~/.kiro/settings/mcp.json` (create it if it doesn't exist) and add:
+
+```json
+{
+  "mcpServers": {
+    "appian-sail-source": {
+      "command": "<UV_PATH>",
+      "args": [
+        "run",
+        "--with", "mcp[cli]",
+        "--with", "httpx",
+        "--python", "3.12",
+        "<REPO_PATH>/power-appian-a11y-audit/mcp-server/server.py"
+      ],
+      "env": {
+        "APPIAN_URL": "https://<YOUR-SITE>.appiancloud.com",
+        "APPIAN_API_KEY": "<YOUR_API_KEY>",
+        "APPIAN_APP_UUID": "",
+        "APPIAN_LOCAL_ZIP": "",
+        "APPIAN_APP_NAME": "SourceSelection"
+      }
+    }
+  }
+}
+```
+
+Replace the placeholders:
+
+| Placeholder | How to find it | Example |
+|-------------|---------------|---------|
+| `<UV_PATH>` | Run `which uv` in terminal | `/opt/homebrew/bin/uv` (macOS) or `~/.cargo/bin/uv` (Linux) |
+| `<REPO_PATH>` | The directory where you cloned the repo | `/Users/jane/repos` or `/home/jane/repos` |
+| `<YOUR-SITE>` | Your Appian environment subdomain | `myteam-dev` → `https://myteam-dev.appiancloud.com` |
+| `<YOUR_API_KEY>` | Generate in Appian Admin Console → API Keys (needs deployment permissions) | `eyJ0eXAi...` |
+
+> `--python 3.12` assumes Python 3.12 is installed. Change to `3.10`, `3.11`, or `3.13` if needed. Minimum is 3.10.
+
+### 4. Verify it works
+
+1. Open Kiro IDE
+2. Go to **MCP Servers** panel → find `appian-sail-source`
+3. Click **Reconnect** (or it should auto-connect)
+4. In chat, type: `list_objects` — if it responds, you're good
+
+### Quick copy-paste example (macOS)
+
+```json
+{
+  "mcpServers": {
+    "appian-sail-source": {
+      "command": "/opt/homebrew/bin/uv",
+      "args": [
+        "run",
+        "--with", "mcp[cli]",
+        "--with", "httpx",
+        "--python", "3.12",
+        "/Users/YOUR_USERNAME/repos/power-appian-a11y-audit/mcp-server/server.py"
+      ],
+      "env": {
+        "APPIAN_URL": "https://your-site.appiancloud.com",
+        "APPIAN_API_KEY": "your-api-key-here",
+        "APPIAN_APP_UUID": "",
+        "APPIAN_LOCAL_ZIP": "",
+        "APPIAN_APP_NAME": "SourceSelection"
+      }
+    }
+  }
+}
+```
+
+### Quick copy-paste example (Linux)
+
+```json
+{
+  "mcpServers": {
+    "appian-sail-source": {
+      "command": "/home/YOUR_USERNAME/.cargo/bin/uv",
+      "args": [
+        "run",
+        "--with", "mcp[cli]",
+        "--with", "httpx",
+        "--python", "3.12",
+        "/home/YOUR_USERNAME/repos/power-appian-a11y-audit/mcp-server/server.py"
+      ],
+      "env": {
+        "APPIAN_URL": "https://your-site.appiancloud.com",
+        "APPIAN_API_KEY": "your-api-key-here",
+        "APPIAN_APP_UUID": "",
+        "APPIAN_LOCAL_ZIP": "",
+        "APPIAN_APP_NAME": "SourceSelection"
+      }
+    }
+  }
+}
+```
 
 ---
 
